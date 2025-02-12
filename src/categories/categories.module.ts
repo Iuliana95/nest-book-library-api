@@ -7,6 +7,6 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
   imports: [EventEmitterModule.forRoot()],
   controllers: [CategoriesController],
   providers: [CategoriesService],
-  exports: [ CategoriesService ]
+  exports: [CategoriesService]
 })
 export class CategoriesModule {}
