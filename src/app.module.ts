@@ -5,10 +5,32 @@ import { UsersService } from './users/users.service';
 import { UsersModule } from './users/users.module';
 import { BooksModule } from './books/books.module';
 import { CategoriesModule } from './categories/categories.module';
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { Category } from "./categories/category.entity";
+import { Book } from "./books/book.entity";
+import { ConfigModule } from "@nestjs/config";
+import { DataSource } from "typeorm";
 
 @Module({
-  imports: [UsersModule, BooksModule, CategoriesModule],
+  imports: [
+      ConfigModule.forRoot(),
+      TypeOrmModule.forRoot({
+          type: 'postgres',
+          host: process.env.DATABASE_HOST!,
+          port: parseInt(process.env.DATABASE_PORT!, 10),
+          username: process.env.DATABASE_USER!,
+          password: process.env.DATABASE_PASSWORD!,
+          database: process.env.DATABASE_NAME!,
+          entities: [Book,Category],
+          synchronize: true,
+      }),
+      TypeOrmModule.forFeature([Book, Category]),
+      UsersModule, BooksModule, CategoriesModule,
+  ],
   controllers: [AppController],
   providers: [AppService, UsersService],
 })
-export class AppModule {}
+
+export class AppModule {
+    constructor(private dataSource: DataSource) {}
+}

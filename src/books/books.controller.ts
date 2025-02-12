@@ -1,8 +1,8 @@
-import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { BooksService } from "./books.service";
 import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
-import {BookWithCategoryPath} from "./interfaces/BookWithCategoryPath.interface";
+import { Book } from "./book.entity";
 
 @Controller('books')
 export class BooksController {
@@ -15,27 +15,27 @@ export class BooksController {
     }
 
     @Get('category/:id')
-    findBooksByCategory(@Param('id', ParseIntPipe) id: number) {
+    async findBooksByCategory(@Param('id', ParseIntPipe) id: number): Promise<Book[]> {
         return this.booksService.findBooksByCategory(id)
     }
 
     @Get(':id')
-    find(@Param('id', ParseIntPipe) id: number): BookWithCategoryPath {
-        return this.booksService.findOneWithCategoryPath(id);
+    async find(@Param('id', ParseIntPipe) id: number) {
+        return await this.booksService.findOneWithCategoryPath(id);
     }
 
     @Post()
-    create(@Body() createBookDto: CreateBookDto) {
-        return this.booksService.create(createBookDto);
+    async create(@Body() createBookDto: CreateBookDto) {
+        return await this.booksService.create(createBookDto);
     }
 
     @Patch(':id')
-    update(@Param('id', ParseIntPipe) id: number, @Body() updateBookDto: UpdateBookDto) {
-        return this.booksService.update(id, updateBookDto);
+    async update(@Param('id', ParseIntPipe) id: number, @Body() updateBookDto: UpdateBookDto) {
+        return await this.booksService.update(id, updateBookDto);
     }
 
     @Delete(':id')
-    delete(@Param('id', ParseIntPipe) id: number) {
-        return this.booksService.delete(id);
+    async delete(@Param('id', ParseIntPipe) id: number) {
+        return await this.booksService.delete(id);
     }
 }

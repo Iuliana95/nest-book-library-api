@@ -1,103 +1,94 @@
-import {BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import {Category} from "./interfaces/category.interface";
-import {CreateCategoryDto} from "./dto/create-category.dto";
-import {UpdateCategoryDto} from "./dto/update-category.dto";
-import { EventEmitter2 } from '@nestjs/event-emitter';
-
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { CreateCategoryDto } from "./dto/create-category.dto";
+import { UpdateCategoryDto } from "./dto/update-category.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Category } from "./category.entity";
 
 @Injectable()
 export class CategoriesService {
 
-    constructor(public eventEmitter: EventEmitter2) {}
+    constructor(
+        @InjectRepository(Category)
+        private readonly categoryRepository: Repository<Category>,
+    ) {}
 
-    private categories: Category[] = [
-        { id: 1, name: "Fiction" },
-        { id: 2, name: "Science Fiction", parentId: 1 },
-        { id: 3, name: "Fantasy", parentId: 1 },
-        { id: 4, name: "Non-Fiction" },
-        { id: 5, name: "Biography", parentId: 4 },
-        { id: 6, name: "History", parentId: 4 },
-        { id: 7, name: "Modern Fiction", parentId: 1 },
-        { id: 8, name: "Classical Literature", parentId: 1 },
-        { id: 9, name: "Space Opera", parentId: 2 },
-        { id: 10, name: "Cyberpunk", parentId: 2 },
-        { id: 11, name: "World History", parentId: 6 },
-        { id: 12, name: "Ancient History", parentId: 6 },
-        { id: 13, name: "Autobiography", parentId: 5 },
-        { id: 14, name: "Historical Fiction", parentId: 3 },
-        { id: 15, name: "Science Biography", parentId: 5 }
-    ];
-
-    findAll() {
-        return this.categories;
+    async findAll(): Promise<Category[]> {
+        return await this.categoryRepository.find();
     }
 
-    find(id: number): Category | undefined {
-        return this.categories.find(cat => cat.id === id);
+    async find(id: number): Promise<Category | null> {
+        return await this.categoryRepository.findOne({ where: { id } });
     }
 
-    findSubcategories(parentId: number): Category[] {
-        return this.categories.filter(c => c.parentId === parentId)
+    async findSubcategories(parentId: number): Promise<Category[]> {
+        const categories = await this.categoryRepository.find();
+        return categories.filter(c => c.parentId === parentId);
     }
 
-    create(createCategoryDto: CreateCategoryDto) {
-        const existingCategory = this.categories.find(category => category.name === createCategoryDto.name);
+    async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+
+        const existingCategory = await this.categoryRepository.findOne({
+            where: { name: createCategoryDto.name },
+        });
         if (existingCategory) {
             throw new BadRequestException('Category name already exists.');
         }
-        const uniqueId = this.categories.length ? Math.max(...this.categories.map(cat => cat.id)) + 1 : 1;
-        const newCategory: Category = {
-            id: uniqueId,
-            name: createCategoryDto.name
-        };
-        if(createCategoryDto.parentId) {
-            newCategory.parentId = createCategoryDto.parentId;
-        }
-        this.categories.push(newCategory);
-        return newCategory;
-    }
 
-    update(id: number, updateCategoryDto: UpdateCategoryDto): Category {
-        const categoryIndex = this.categories.findIndex(category => category.id === id);
-        if (categoryIndex === -1) {
-            throw new NotFoundException(`Category with ID ${id} not found`);
-        }
+        if (createCategoryDto.parentId) {
+            const parentCategory = await this.categoryRepository.findOne({
+                where: { id: createCategoryDto.parentId },
+            });
 
-        if (updateCategoryDto.parentId !== undefined) {
-            if (updateCategoryDto.parentId === id) {
-                throw new BadRequestException("A category cannot be its own parent.");
-            }
-
-            const parentCategory = this.categories.find(cat => cat.id === updateCategoryDto.parentId);
             if (!parentCategory) {
-                throw new NotFoundException(`Parent category with ID ${updateCategoryDto.parentId} not found`);
+                throw new NotFoundException('Parent category not found.');
             }
         }
 
-        this.categories[categoryIndex] = {
-            ...this.categories[categoryIndex],
-            ...updateCategoryDto
-        };
-
-        return this.categories[categoryIndex];
-    }
-
-    delete(id: number): Category | void {
-        const categoryIndex = this.categories.findIndex(category => category.id === id);
-        if (categoryIndex === -1) {
-            throw new NotFoundException(`Category with ID ${id} not found.`);
-        }
-        const deletedCategory = this.categories[categoryIndex];
-        this.eventEmitter.emit('category.deleted', id);
-
-        this.categories = this.categories.map(cat => {
-            if(cat.parentId === id) {
-                cat.parentId = null;
-            }
-            return cat;
+        const newCategory = await this.categoryRepository.create({
+            name: createCategoryDto.name,
+            parentId: createCategoryDto.parentId
         });
 
-        this.categories.splice(categoryIndex, 1);
-        return deletedCategory;
+        return await this.categoryRepository.save(newCategory);
+    }
+
+    async update(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+
+        const category = await this.categoryRepository.findOne({ where: { id } });
+
+        if (!category) {
+            throw new NotFoundException('Category not found');
+        }
+
+        if (updateCategoryDto.parentId) {
+            const parentCategory = await this.categoryRepository.findOne({ where: { id: updateCategoryDto.parentId } });
+
+            if (!parentCategory) {
+                throw new NotFoundException('Parent category not found.');
+            }
+
+            category.parentId = updateCategoryDto.parentId;
+        }
+
+        Object.assign(category, updateCategoryDto);
+
+        return await this.categoryRepository.save(category);
+    }
+
+    async delete(id: number): Promise<void> {
+
+        const category = await this.categoryRepository.findOne({ where: { id } });
+        if (!category) {
+            throw new NotFoundException('Category not found');
+        }
+
+        await this.categoryRepository.update({ parentId: id }, { parentId: null });
+
+        const result = await this.categoryRepository.delete(id);
+
+        if (result.affected === 0) {
+            throw new NotFoundException('Category not found');
+        }
     }
 }

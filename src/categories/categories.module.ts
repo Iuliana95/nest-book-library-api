@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
-import { EventEmitterModule } from "@nestjs/event-emitter";
+import {TypeOrmModule} from "@nestjs/typeorm";
+import {Category} from "./category.entity";
 
 @Module({
-  imports: [EventEmitterModule.forRoot()],
+  imports: [ TypeOrmModule.forFeature([Category])],
   controllers: [CategoriesController],
   providers: [CategoriesService],
   exports: [CategoriesService]

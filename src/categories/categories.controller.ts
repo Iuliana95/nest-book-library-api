@@ -2,6 +2,7 @@ import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post} from '@
 import {CategoriesService} from "./categories.service";
 import {CreateCategoryDto} from "./dto/create-category.dto";
 import {UpdateCategoryDto} from "./dto/update-category.dto";
+import {Category} from "./category.entity";
 
 @Controller('categories')
 export class CategoriesController {
@@ -9,13 +10,13 @@ export class CategoriesController {
     constructor(private categoriesService: CategoriesService) {}
 
     @Get()
-    findAll() {
-        return this.categoriesService.findAll();
+    async findAll() {
+        return await this.categoriesService.findAll();
     }
 
     @Get(':id')
-    find(@Param('id', ParseIntPipe) id: number) {
-        return this.categoriesService.find(id);
+    async find(@Param('id', ParseIntPipe) id: number): Promise<Category | null> {
+        return await this.categoriesService.find(id);
     }
 
     @Post()
@@ -24,12 +25,12 @@ export class CategoriesController {
     }
 
     @Patch(':id')
-    update(@Param('id', ParseIntPipe) id: number, @Body() updateCategoryDto: UpdateCategoryDto) {
-        return this.categoriesService.update(id, updateCategoryDto);
+    async update(@Param('id', ParseIntPipe) id: number, @Body() updateCategoryDto: UpdateCategoryDto) {
+        return await this.categoriesService.update(id, updateCategoryDto);
     }
 
     @Delete(':id')
-    delete(@Param('id', ParseIntPipe) id: number) {
-        return this.categoriesService.delete(id);
+    async delete(@Param('id', ParseIntPipe) id: number) {
+        return await this.categoriesService.delete(id);
     }
 }

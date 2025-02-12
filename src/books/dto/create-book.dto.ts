@@ -7,7 +7,6 @@ export class CreateBookDto {
     name: string;
 
     @IsInt()
-    @Min(1)
     categoryId: number;
 
     @IsOptional()
