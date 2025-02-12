@@ -6,7 +6,14 @@ import {UpdateCategoryDto} from "./dto/update-category.dto";
 @Injectable()
 export class CategoriesService {
 
-    private categories: Category[] = [];
+    private categories: Category[] = [
+        { id: 1, name: "Fiction" },
+        { id: 2, name: "Science Fiction", parentId: 1 },
+        { id: 3, name: "Fantasy", parentId: 1 },
+        { id: 4, name: "Non-Fiction"},
+        { id: 5, name: "Biography", parentId: 4 },
+        { id: 6, name: "History", parentId: 4 }
+    ];
 
     findAll() {
         return this.categories;
@@ -17,14 +24,14 @@ export class CategoriesService {
         if (existingCategory) {
             throw new BadRequestException('Category name already exists.');
         }
-        const categoriesByHighestId = [...this.categories].sort((a,b) => b.id - a.id);
-        const uniqueId = categoriesByHighestId[0].id + 1;
-
+        const uniqueId = this.categories.length ? Math.max(...this.categories.map(cat => cat.id)) + 1 : 1;
         const newCategory: Category = {
             id: uniqueId,
-            name: createCategoryDto.name,
-            parent: createCategoryDto.parentId ? this.categories.find(c => c.id === createCategoryDto.parentId) : undefined,
+            name: createCategoryDto.name
         };
+        if(createCategoryDto.parentId) {
+            newCategory.parentId = createCategoryDto.parentId;
+        }
         this.categories.push(newCategory);
         return newCategory;
     }
@@ -32,34 +39,42 @@ export class CategoriesService {
     update(id: number, updateCategoryDto: UpdateCategoryDto): Category {
         const categoryIndex = this.categories.findIndex(category => category.id === id);
         if (categoryIndex === -1) {
-            throw new NotFoundException('Category not found');
+            throw new NotFoundException(`Category with ID ${id} not found`);
         }
 
-        const updatedCategory: Category = { ...this.categories[categoryIndex], ...updateCategoryDto };
-        if (updateCategoryDto.parentId) {
-            updatedCategory.parent = this.categories.find(c => c.id === updateCategoryDto.parentId);
+        if (updateCategoryDto.parentId !== undefined) {
+            if (updateCategoryDto.parentId === id) {
+                throw new BadRequestException("A category cannot be its own parent.");
+            }
+
+            const parentCategory = this.categories.find(cat => cat.id === updateCategoryDto.parentId);
+            if (!parentCategory) {
+                throw new NotFoundException(`Parent category with ID ${updateCategoryDto.parentId} not found`);
+            }
         }
 
-        this.categories[categoryIndex] = updatedCategory;
-        return updatedCategory;
+        this.categories[categoryIndex] = {
+            ...this.categories[categoryIndex],
+            ...updateCategoryDto
+        };
+
+        return this.categories[categoryIndex];
     }
 
-    delete(id: number): void {
+    delete(id: number): Category | void {
         const categoryIndex = this.categories.findIndex(category => category.id === id);
         if (categoryIndex === -1) {
-            throw new NotFoundException('Category not found');
+            throw new NotFoundException(`Category with ID ${id} not found.`);
         }
-        const categoryToDelete = this.categories[categoryIndex];
-        this.removeSubcategories(categoryToDelete);
-        this.categories.splice(categoryIndex, 1);
-    }
-
-    private removeSubcategories(category: Category): void {
-        const subcategories = this.categories.filter(c => c.parent?.id === category.id);
-        subcategories.forEach(subcategory => {
-            this.removeSubcategories(subcategory);
-            this.categories.splice(this.categories.indexOf(subcategory), 1);
+        const deletedCategory = this.categories[categoryIndex];
+        this.categories = this.categories.map(cat => {
+            if(cat.parentId === id) {
+                cat.parentId = null;
+            }
+            return cat;
         });
-    }
 
+        this.categories.splice(categoryIndex, 1);
+        return deletedCategory;
+    }
 }
