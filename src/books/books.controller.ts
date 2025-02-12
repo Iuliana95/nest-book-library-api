@@ -10,13 +10,13 @@ export class BooksController {
     constructor(private readonly booksService: BooksService) {}
 
     @Get()
-    findAll() {
-        return this.booksService.findAll();
+    async findAll() {
+        return await this.booksService.findAll();
     }
 
     @Get('category/:id')
     async findBooksByCategory(@Param('id', ParseIntPipe) id: number): Promise<Book[]> {
-        return this.booksService.findBooksByCategory(id)
+        return await this.booksService.findBooksByCategory(id)
     }
 
     @Get(':id')
