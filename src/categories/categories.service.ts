@@ -1,10 +1,14 @@
-import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
+import {BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import {Category} from "./interfaces/category.interface";
 import {CreateCategoryDto} from "./dto/create-category.dto";
 import {UpdateCategoryDto} from "./dto/update-category.dto";
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 
 @Injectable()
 export class CategoriesService {
+
+    constructor(public eventEmitter: EventEmitter2) {}
 
     private categories: Category[] = [
         { id: 1, name: "Fiction" },
@@ -84,6 +88,8 @@ export class CategoriesService {
             throw new NotFoundException(`Category with ID ${id} not found.`);
         }
         const deletedCategory = this.categories[categoryIndex];
+        this.eventEmitter.emit('category.deleted', id);
+
         this.categories = this.categories.map(cat => {
             if(cat.parentId === id) {
                 cat.parentId = null;

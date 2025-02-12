@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
+import {BadRequestException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { Book } from "./interfaces/book.interface";
@@ -9,6 +9,12 @@ import {BookWithCategoryPath} from "./interfaces/BookWithCategoryPath.interface"
 export class BooksService {
 
     constructor(private categoryService: CategoriesService) {}
+
+    onModuleInit() {
+        this.categoryService.eventEmitter.on('category.deleted', (categoryId: number) => {
+            this.books = this.books.filter(book => book.categoryId !== categoryId);
+        });
+    }
 
     private books: Book[] = [
         { id: 1, name: 'The Lord of the Rings', description: 'A fantasy epic by J.R.R. Tolkien', categoryId: 3 },
