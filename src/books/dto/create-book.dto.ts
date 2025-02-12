@@ -7,13 +7,14 @@ export class CreateBookDto {
     name: string;
 
     @IsInt()
+    @IsNotEmpty()
     categoryId: number;
 
     @IsOptional()
     @IsString()
     description?: string;
 
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
-    author?: string;
+    author: string;
 }

@@ -10,15 +10,12 @@ export class Book {
     @Column({ unique: true })
     name: string;
 
-    @Column()
+    @Column({ nullable: false })
     author: string;
 
-    @ManyToOne(() => Category, category => category.books, { nullable: true })
+    @ManyToOne(() => Category, category => category.books, { nullable: false, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'categoryId' })
     category: Category;
-
-    @Column()
-    categoryId: number;
 
     @Column({ nullable: true })
     description?: string;

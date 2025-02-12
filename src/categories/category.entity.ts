@@ -13,6 +13,6 @@ export class Category {
     @Column({ nullable: true, type: 'int' })
     parentId?: number | null;
 
-    @OneToMany(() => Book, book => book.category)
+    @OneToMany(() => Book, book => book.category, { cascade: ['remove'] })
     books: Book[];
 }

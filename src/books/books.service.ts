@@ -5,7 +5,6 @@ import { CategoriesService } from "../categories/categories.service";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Book } from "./book.entity";
-import { Category } from "../categories/category.entity";
 
 @Injectable()
 export class BooksService {
@@ -17,7 +16,9 @@ export class BooksService {
     ) {}
 
     async findAll(): Promise<Book[]> {
-        return this.bookRepository.find();
+        return this.bookRepository.find({
+            relations: ['category'],
+        });
     }
 
     async findBooksByCategory(categoryId: number): Promise<Book[]> {
@@ -93,19 +94,24 @@ export class BooksService {
         if (existingBook) {
             throw new BadRequestException('Book name already exists.');
         }
-
-        let category: Category | null | undefined = null;
-        if (createBookDto.categoryId) {
-            category = await this.categoryService.find(createBookDto.categoryId);
-            if (!category) {
-                throw new NotFoundException('Category not found.');
-            }
+        if(!createBookDto.categoryId) {
+            throw new NotFoundException('Category not specified.');
         }
 
-        const newBook = await this.bookRepository.create({
-            ...createBookDto,
-            categoryId: createBookDto.categoryId,
+        const category = await this.categoryService.find(createBookDto.categoryId);
+        if (!category) {
+            throw new NotFoundException('Category not found.');
+        }
+
+        const newBook = this.bookRepository.create({
+            name: createBookDto.name,
+            author: createBookDto.author,
+            description: createBookDto.description,
         });
+
+        if(category) {
+            newBook.category = category;
+        }
 
         return await this.bookRepository.save(newBook);
     }
