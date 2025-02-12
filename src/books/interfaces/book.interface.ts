@@ -1,7 +1,7 @@
 export interface Book {
     id: number;
     name: string;
-    categoryIds: number[];
+    categoryId?: number | null;
     description?: string;
     author?: string;
 }

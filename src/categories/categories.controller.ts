@@ -13,6 +13,11 @@ export class CategoriesController {
         return this.categoriesService.findAll();
     }
 
+    @Get(':id')
+    find(@Param('id', ParseIntPipe) id: number) {
+        return this.categoriesService.find(id);
+    }
+
     @Post()
     create(@Body() createCategoryDto: CreateCategoryDto) {
         return this.categoriesService.create(createCategoryDto);

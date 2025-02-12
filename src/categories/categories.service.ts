@@ -19,6 +19,10 @@ export class CategoriesService {
         return this.categories;
     }
 
+    find(id: number) {
+        return this.categories.find(cat => cat.id === id);
+    }
+
     create(createCategoryDto: CreateCategoryDto) {
         const existingCategory = this.categories.find(category => category.name === createCategoryDto.name);
         if (existingCategory) {
