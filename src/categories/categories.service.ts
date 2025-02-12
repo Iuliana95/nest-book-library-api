@@ -10,17 +10,30 @@ export class CategoriesService {
         { id: 1, name: "Fiction" },
         { id: 2, name: "Science Fiction", parentId: 1 },
         { id: 3, name: "Fantasy", parentId: 1 },
-        { id: 4, name: "Non-Fiction"},
+        { id: 4, name: "Non-Fiction" },
         { id: 5, name: "Biography", parentId: 4 },
-        { id: 6, name: "History", parentId: 4 }
+        { id: 6, name: "History", parentId: 4 },
+        { id: 7, name: "Modern Fiction", parentId: 1 },
+        { id: 8, name: "Classical Literature", parentId: 1 },
+        { id: 9, name: "Space Opera", parentId: 2 },
+        { id: 10, name: "Cyberpunk", parentId: 2 },
+        { id: 11, name: "World History", parentId: 6 },
+        { id: 12, name: "Ancient History", parentId: 6 },
+        { id: 13, name: "Autobiography", parentId: 5 },
+        { id: 14, name: "Historical Fiction", parentId: 3 },
+        { id: 15, name: "Science Biography", parentId: 5 }
     ];
 
     findAll() {
         return this.categories;
     }
 
-    find(id: number) {
+    find(id: number): Category | undefined {
         return this.categories.find(cat => cat.id === id);
+    }
+
+    findSubcategories(parentId: number): Category[] {
+        return this.categories.filter(c => c.parentId === parentId)
     }
 
     create(createCategoryDto: CreateCategoryDto) {

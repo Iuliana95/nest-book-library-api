@@ -2,6 +2,7 @@ import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post} from '@
 import { BooksService } from "./books.service";
 import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
+import {BookWithCategoryPath} from "./interfaces/BookWithCategoryPath.interface";
 
 @Controller('books')
 export class BooksController {
@@ -11,6 +12,16 @@ export class BooksController {
     @Get()
     findAll() {
         return this.booksService.findAll();
+    }
+
+    @Get('category/:id')
+    findBooksByCategory(@Param('id', ParseIntPipe) id: number) {
+        return this.booksService.findBooksByCategory(id)
+    }
+
+    @Get(':id')
+    find(@Param('id', ParseIntPipe) id: number): BookWithCategoryPath {
+        return this.booksService.findOneWithCategoryPath(id);
     }
 
     @Post()
