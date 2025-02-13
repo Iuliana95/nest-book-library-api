@@ -54,7 +54,7 @@ export class BooksService {
         return allSubcategoryBooks;
     }
 
-    async findOneWithCategoryPath(id: number): Promise<{ book: Book; categoryPath: string }> {
+    async findBook(id: number): Promise<{ book: Book; categoryPath: string[] }> {
         const book = await this.bookRepository.findOne({
             where: { id },
             relations: ['category'],
@@ -64,25 +64,33 @@ export class BooksService {
             throw new NotFoundException('Book not found');
         }
 
-        const categoryPath = book.category ? await this.getCategoryPath(book.category.id) ?? '' : '';
-        return { book, categoryPath };
+        const categoryPaths = await this.getCategoryPaths(book.category.id);
+        return { book, categoryPath: categoryPaths  };
     }
 
-    async getCategoryPath(categoryId: number): Promise<string> {
+    async getCategoryPaths(categoryId: number): Promise<string[]> {
         const category = await this.categoryService.find(categoryId);
 
         if (!category) {
             throw new NotFoundException('Category not found');
         }
 
-        let path = category.name;
+        let paths: string[] = [];
+        let path: string = category.name;
 
-        if (category.parentId) {
-            const parentPath = await this.getCategoryPath(category.parentId);
-            path = parentPath + ' / ' + path;
+        const subcategories = await this.categoryService.findSubcategories(categoryId);
+        if (subcategories && subcategories.length > 0) {
+            for (const subcategory of subcategories) {
+                const subcategoryPaths = await this.getCategoryPaths(subcategory.id);
+                for (const subcategoryPath of subcategoryPaths) {
+                    paths.push(path + ' / ' + subcategoryPath);
+                }
+            }
+        } else {
+            paths.push(path);
         }
 
-        return path;
+        return paths;
     }
 
     async create(createBookDto: CreateBookDto): Promise<Book> {

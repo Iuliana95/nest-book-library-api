@@ -21,7 +21,7 @@ export class BooksController {
 
     @Get(':id')
     async find(@Param('id', ParseIntPipe) id: number) {
-        return await this.booksService.findOneWithCategoryPath(id);
+        return await this.booksService.findBook(id);
     }
 
     @Post()
