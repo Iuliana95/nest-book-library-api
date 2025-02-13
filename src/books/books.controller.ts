@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query} from '@nestjs/common';
 import { BooksService } from "./books.service";
 import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { Book } from "./book.entity";
+import {PaginationDto} from "./dto/pagination.dto";
 
 @Controller('books')
 export class BooksController {
@@ -10,13 +11,13 @@ export class BooksController {
     constructor(private readonly booksService: BooksService) {}
 
     @Get()
-    async findAll() {
-        return await this.booksService.findAll();
+    async findAll(@Query() paginationDto: PaginationDto) {
+        return await this.booksService.findAll(paginationDto);
     }
 
     @Get('category/:id')
-    async findBooksFromCategory(@Param('id', ParseIntPipe) id: number): Promise<Book[]> {
-        return await this.booksService.findBooksFromCategory(id)
+    async findBooksFromCategory(@Param('id', ParseIntPipe) id: number, @Query() paginationDto: PaginationDto): Promise<Book[]> {
+        return await this.booksService.findBooksFromCategory(id, paginationDto)
     }
 
     @Get(':id')

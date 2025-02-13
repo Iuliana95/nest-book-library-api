@@ -5,6 +5,8 @@ import { CategoriesService } from "../categories/categories.service";
 import { InjectRepository } from "@nestjs/typeorm";
 import {In, Repository} from "typeorm";
 import { Book } from "./book.entity";
+import {PaginationDto} from "./dto/pagination.dto";
+import {DEFAULT_PAGE_SIZE} from "./utils/constants";
 
 @Injectable()
 export class BooksService {
@@ -15,13 +17,15 @@ export class BooksService {
         private categoryService: CategoriesService,
     ) {}
 
-    async findAll(): Promise<Book[]> {
+    async findAll(paginationDto: PaginationDto): Promise<Book[]> {
         return await this.bookRepository.find({
             relations: ['category'],
+            skip: paginationDto.skip,
+            take: paginationDto.limit ?? DEFAULT_PAGE_SIZE
         });
     }
 
-    async findBooksFromCategory(categoryId: number): Promise<Book[]> {
+    async findBooksFromCategory(categoryId: number, paginationDto: PaginationDto): Promise<Book[]> {
         const category = await this.categoryService.find(categoryId);
         if (!category) {
             throw new NotFoundException('Category not found.');
@@ -34,8 +38,34 @@ export class BooksService {
                     id: In(allCategoryIds),
                 },
             },
-            relations: ['category']
+            relations: ['category'],
+            skip: paginationDto.skip,
+            take: paginationDto.limit ?? DEFAULT_PAGE_SIZE
         });
+
+        // const books = await this.bookRepository
+        //     .createQueryBuilder('book')
+        //     .innerJoinAndSelect('book.category', 'category')
+        //     .where(`book.categoryId IN (
+        //         WITH RECURSIVE CategoryTree AS (
+        //             SELECT id
+        //             FROM category
+        //             WHERE "parentId" = :categoryId
+        //
+        //             UNION ALL
+        //
+        //             SELECT c.id
+        //             FROM category c
+        //             INNER JOIN CategoryTree ct ON c."parentId" = ct.id
+        //         )
+        //         SELECT id FROM CategoryTree
+        //         UNION
+        //         SELECT :categoryId
+        //       )`, { categoryId })
+        //     .skip(paginationDto.skip)
+        //     .take(paginationDto.limit ?? DEFAULT_PAGE_SIZE)
+        //     .getMany();
+
         return books;
     }
 
@@ -47,7 +77,6 @@ export class BooksService {
                 return this.getAllSubcategoryIds(subcategoryId);
             }
         ));
-
         return [categoryId, ...subcategoryIds, ...nestedSubcategoryIds.flat()];
     }
 
