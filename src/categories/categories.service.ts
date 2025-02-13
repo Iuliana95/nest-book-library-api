@@ -26,6 +26,14 @@ export class CategoriesService {
         return categories.filter(c => c.parentId === parentId);
     }
 
+    async findSubcategoriesIds(parentId: number): Promise<number[]> {
+        const subcategories = await this.categoryRepository.find({
+            where: { parentId },
+            select: ['id'],
+        });
+        return subcategories.map(c => c.id);
+    }
+
     async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
 
         const existingCategory = await this.categoryRepository.findOne({

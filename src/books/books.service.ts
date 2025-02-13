@@ -3,7 +3,7 @@ import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { CategoriesService } from "../categories/categories.service";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import {In, Repository} from "typeorm";
 import { Book } from "./book.entity";
 
 @Injectable()
@@ -21,37 +21,34 @@ export class BooksService {
         });
     }
 
-    async findBooksByCategory(categoryId: number): Promise<Book[]> {
-        const category = this.categoryService.find(categoryId);
+    async findBooksFromCategory(categoryId: number): Promise<Book[]> {
+        const category = await this.categoryService.find(categoryId);
         if (!category) {
             throw new NotFoundException('Category not found.');
         }
+
+        const allCategoryIds = await this.getAllSubcategoryIds(categoryId);
         const books = await this.bookRepository.find({
             where: {
-                category: { id: categoryId },
+                category: {
+                    id: In(allCategoryIds),
+                },
             },
+            relations: ['category']
         });
-        const subcategoryBooks = this.findBooksInSubcategories(categoryId);
-        return books.concat(await subcategoryBooks);
+        return books;
     }
 
-    async findBooksInSubcategories(parentId: number): Promise<Book[]> {
-        const subcategories = await this.categoryService.findSubcategories(parentId);
-        let allSubcategoryBooks: Book[] = [];
+    private async getAllSubcategoryIds(categoryId: number): Promise<number[]> {
+        const subcategories = await this.categoryService.findSubcategoriesIds(categoryId);
+        const subcategoryIds = subcategories.map(subcategoryId => subcategoryId);
+        const nestedSubcategoryIds = await Promise.all(
+            subcategories.map(async (subcategoryId) => {
+                return this.getAllSubcategoryIds(subcategoryId);
+            }
+        ));
 
-        for (const subcategory of subcategories) {
-            const books = await this.bookRepository.find({
-                where: {
-                    category: { id: subcategory.id },
-                },
-            });
-            allSubcategoryBooks = [...allSubcategoryBooks, ...books];
-
-            const nestedSubcategoryBooks = await this.findBooksInSubcategories(subcategory.id);
-            allSubcategoryBooks = [...allSubcategoryBooks, ...nestedSubcategoryBooks];
-        }
-
-        return allSubcategoryBooks;
+        return [categoryId, ...subcategoryIds, ...nestedSubcategoryIds.flat()];
     }
 
     async findBook(id: number): Promise<{ book: Book; categoryPath: string[] }> {

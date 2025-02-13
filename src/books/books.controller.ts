@@ -15,8 +15,8 @@ export class BooksController {
     }
 
     @Get('category/:id')
-    async findBooksByCategory(@Param('id', ParseIntPipe) id: number): Promise<Book[]> {
-        return await this.booksService.findBooksByCategory(id)
+    async findBooksFromCategory(@Param('id', ParseIntPipe) id: number): Promise<Book[]> {
+        return await this.booksService.findBooksFromCategory(id)
     }
 
     @Get(':id')
