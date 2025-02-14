@@ -20,7 +20,7 @@ import { DataSource } from "typeorm";
           password: process.env.DATABASE_PASSWORD!,
           database: process.env.DATABASE_NAME!,
           entities: [Book,Category],
-          synchronize: true,
+          synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
       }),
       TypeOrmModule.forFeature([Book, Category]),
       BooksModule, CategoriesModule,
