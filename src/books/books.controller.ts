@@ -15,7 +15,7 @@ export class BooksController {
     @Get()
     @ApiOperation({ summary: 'Retrieve all books with pagination' })
     @ApiQuery({ name: 'skip', required: false, description: 'Number of items to skip for pagination' })
-    @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page' })
+    @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page ( default is 10 if not specified )' })
     @ApiResponse({ status: 200, description: 'List of books returned successfully' })
     @ApiResponse({ status: 404, description: 'No books found' })
     async findAll(@Query() paginationDto: PaginationDto) {
@@ -26,7 +26,7 @@ export class BooksController {
     @ApiOperation({ summary: 'Retrieve books from a specific category' })
     @ApiParam({ name: 'id', type: Number, description: 'Category ID to retrieve books from' })
     @ApiQuery({ name: 'skip', required: false, description: 'Number of items to skip for pagination' })
-    @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page' })
+    @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page ( default is 10 if not specified )' })
     @ApiResponse({ status: 200, description: 'Books from category returned successfully' })
     @ApiResponse({ status: 404, description: 'Category not found' })
     async findBooksFromCategory(@Param('id', ParseIntPipe) id: number, @Query() paginationDto: PaginationDto): Promise<Book[]> {

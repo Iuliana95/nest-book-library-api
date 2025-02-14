@@ -3,7 +3,7 @@ import {CategoriesService} from "./categories.service";
 import {CreateCategoryDto} from "./dto/create-category.dto";
 import {UpdateCategoryDto} from "./dto/update-category.dto";
 import {Category} from "./category.entity";
-import {ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags} from "@nestjs/swagger";
 
 @ApiTags('Categories Controller')
 @Controller('categories')
@@ -13,8 +13,6 @@ export class CategoriesController {
 
     @Get()
     @ApiOperation({ summary: 'Retrieve all categories' })
-    @ApiQuery({ name: 'skip', required: false, description: 'Number of items to skip for pagination' })
-    @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page' })
     @ApiResponse({ status: 200, description: 'List of categories returned successfully' })
     @ApiResponse({ status: 404, description: 'No categories found' })
     async findAll() {
