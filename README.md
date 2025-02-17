@@ -19,7 +19,7 @@ This project is a backend API for managing a book library, implemented in **Type
 
 * Migrated to Prisma for database interaction
 
-* Unit tests for core functionality (In Progress)
+* Unit tests for core functionality (not updated after Prisma integration)
 
 ------------
 
@@ -72,7 +72,7 @@ npm start:dev   # Start in development mode with watch mode
 npm start:prod  # Start in production mode  
 ```
 
-## Run tests
+## Run tests  (not updated after Prisma integration)
 
 ```bash
 # unit tests
