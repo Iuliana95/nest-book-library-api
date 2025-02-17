@@ -14,7 +14,7 @@ export class Book {
     author: string;
 
     @ManyToOne(() => Category, category => category.books, { nullable: false, onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'categoryid' })
+    @JoinColumn({ name: 'categoryId' })
     category: Category;
 
     @Column({ nullable: true })

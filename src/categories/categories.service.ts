@@ -1,50 +1,69 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import { UpdateCategoryDto } from "./dto/update-category.dto";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Category } from "./category.entity";
+import {DatabaseService} from "../database/database.service";
+import {Prisma} from "../generated/client";
 
 @Injectable()
 export class CategoriesService {
 
     constructor(
-        @InjectRepository(Category)
-        private readonly categoryRepository: Repository<Category>,
+        private readonly prisma: DatabaseService,
     ) {}
 
-    async findAll(): Promise<Category[]> {
-        return await this.categoryRepository.find();
+    async findAll(): Promise<Prisma.CategoryGetPayload<{}>[]> {
+        const categories = await this.prisma.category.findMany({
+            select: {
+                id: true,
+                name: true,
+                parentId: true,
+            },
+        });
+        return categories;
     }
 
-    async find(id: number): Promise<Category | null> {
-        return await this.categoryRepository.findOne({ where: { id } });
+    async find(id: number): Promise<Prisma.CategoryGetPayload<{}>> {
+
+        const category = await this.prisma.category.findUnique({
+            where: { id },
+        });
+
+        if (!category) {
+            throw new NotFoundException('Category not found');
+        }
+
+        return category;
     }
 
-    async findSubcategories(parentId: number): Promise<Category[]> {
-        const categories = await this.categoryRepository.find();
-        return categories.filter(c => c.parentId === parentId);
+    async findSubcategories(parentId: number): Promise<Prisma.CategoryGetPayload<{}>[]> {
+        const categories = await this.prisma.category.findMany({
+            where: { parentId },
+        });
+
+        return categories;
     }
 
     async findSubcategoriesIds(parentId: number): Promise<number[]> {
-        const subcategories = await this.categoryRepository.find({
+        const categories = await this.prisma.category.findMany({
             where: { parentId },
-            select: ['id'],
+            select: { id: true },
         });
-        return subcategories.map(c => c.id);
+
+        return categories.map(c => c.id);
     }
 
-    async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+    async create(createCategoryDto: CreateCategoryDto): Promise<Prisma.CategoryGetPayload<{}>> {
 
-        const existingCategory = await this.categoryRepository.findOne({
+        const existingCategory = await this.prisma.category.findUnique({
             where: { name: createCategoryDto.name },
         });
+
         if (existingCategory) {
             throw new BadRequestException('Category name already exists.');
         }
 
         if (createCategoryDto.parentId) {
-            const parentCategory = await this.categoryRepository.findOne({
+            const parentCategory = await this.prisma.category.findUnique({
                 where: { id: createCategoryDto.parentId },
             });
 
@@ -53,50 +72,57 @@ export class CategoriesService {
             }
         }
 
-        const newCategory = await this.categoryRepository.create({
-            name: createCategoryDto.name,
-            parentId: createCategoryDto.parentId
+        const createdCategory = this.prisma.category.create({
+            data: {
+                name: createCategoryDto.name,
+                parentId: createCategoryDto.parentId ?? null,
+            },
         });
 
-        return await this.categoryRepository.save(newCategory);
+        return createdCategory;
     }
 
-    async update(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+    async update(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Prisma.CategoryGetPayload<{}>> {
 
-        const category = await this.categoryRepository.findOne({ where: { id } });
+        await this.find(id);
 
-        if (!category) {
-            throw new NotFoundException('Category not found');
+        if(updateCategoryDto.name) {
+            const existingCategory = await this.prisma.category.findUnique({
+                where: { name: updateCategoryDto.name }
+            });
+
+            if (existingCategory) {
+                throw new BadRequestException('Category name already exists.');
+            }
         }
 
         if (updateCategoryDto.parentId) {
-            const parentCategory = await this.categoryRepository.findOne({ where: { id: updateCategoryDto.parentId } });
+            const parentCategory = await this.prisma.category.findUnique({
+                where: { id: updateCategoryDto.parentId },
+            });
 
             if (!parentCategory) {
                 throw new NotFoundException('Parent category not found.');
             }
-
-            category.parentId = updateCategoryDto.parentId;
         }
 
-        Object.assign(category, updateCategoryDto);
+        const updatedCategory = this.prisma.category.update({
+            where: { id },
+            data: updateCategoryDto,
+        });
 
-        return await this.categoryRepository.save(category);
+        return updatedCategory;
     }
 
     async delete(id: number): Promise<void> {
 
-        const category = await this.categoryRepository.findOne({ where: { id } });
-        if (!category) {
-            throw new NotFoundException('Category not found');
-        }
+        await this.find(id);
 
-        await this.categoryRepository.update({ parentId: id }, { parentId: null });
+        await this.prisma.category.updateMany({
+            where: { parentId: id },
+            data: { parentId: null },
+        });
 
-        const result = await this.categoryRepository.delete(id);
-
-        if (result.affected === 0) {
-            throw new NotFoundException('Category not found');
-        }
+        await this.prisma.category.delete({ where: { id } });
     }
 }

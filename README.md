@@ -5,19 +5,21 @@ This project is a backend API for managing a book library, implemented in **Type
 --------
 # Features
 
-*   CRUD operations for **Books** (Add/Edit/Delete/List/View)
+* CRUD operations for **Books** (Add/Edit/Delete/List/View)
 
-*   CRUD operations for **Categories** (Add/Edit/Delete/List/View)
+* CRUD operations for **Categories** (Add/Edit/Delete/List/View)
 
-*   Unique name validation for both Books and Categories
+* Unique name validation for both Books and Categories
 
-*   Nested Categories (expandable to infinite depth)
+* Nested Categories (expandable to infinite depth)
 
-*   Breadcrumb generation for Books
+* Breadcrumb generation for Books
 
-*   Automatic deletion of Books when their Category is removed
+* Automatic deletion of Books when their Category is removed
 
-*   Unit tests for core functionality
+* Migrated to Prisma for database interaction
+
+* Unit tests for core functionality (In Progress)
 
 ------------
 
@@ -41,7 +43,15 @@ cd nest-book-library-api
 npm install
 
 # Configure environment variables
-cp .env.example .env  # Update database credentials in .env
+cp .env.example .env
+
+# Update database credentials in .env
+DATABASE_URL
+
+# Initiate Database
+npx prisma migrate deploy
+
+# Populate Database with Test Data
 
 # Option 1: Run SQL setup file via command line
 Run the setup.sql file to populate the database
@@ -53,8 +63,13 @@ psql -U $DATABASE_USER -d $DATABASE_NAME -h $DATABASE_HOST -p $DATABASE_PORT -a 
 3. Copy the contents of setup.sql file.
 4. Paste and execute the queries in the query window.
 
+# Build Project ( generates Prisma Client and dist Folder )
+npm run build
+
 # Start the server
-npm start
+npm start       # Start the application normally  
+npm start:dev   # Start in development mode with watch mode  
+npm start:prod  # Start in production mode  
 ```
 
 ## Run tests

@@ -2,8 +2,8 @@ import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post} from '@
 import {CategoriesService} from "./categories.service";
 import {CreateCategoryDto} from "./dto/create-category.dto";
 import {UpdateCategoryDto} from "./dto/update-category.dto";
-import {Category} from "./category.entity";
 import {ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {Prisma} from "../generated/client";
 
 @ApiTags('Categories Controller')
 @Controller('categories')
@@ -24,7 +24,7 @@ export class CategoriesController {
     @ApiParam({ name: 'id', type: Number, description: 'Category ID to retrieve details for' })
     @ApiResponse({ status: 200, description: 'Category found and returned' })
     @ApiResponse({ status: 404, description: 'Category not found' })
-    async find(@Param('id', ParseIntPipe) id: number): Promise<Category | null> {
+    async find(@Param('id', ParseIntPipe) id: number): Promise<Prisma.CategoryGetPayload<{}>> {
         return await this.categoriesService.find(id);
     }
 

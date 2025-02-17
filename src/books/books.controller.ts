@@ -1,10 +1,10 @@
 import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query} from '@nestjs/common';
-import { BooksService } from "./books.service";
-import { CreateBookDto } from "./dto/create-book.dto";
-import { UpdateBookDto } from "./dto/update-book.dto";
-import { Book } from "./book.entity";
+import {BooksService} from "./books.service";
+import {CreateBookDto} from "./dto/create-book.dto";
+import {UpdateBookDto} from "./dto/update-book.dto";
 import {PaginationDto} from "./dto/pagination.dto";
 import {ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {Prisma} from "../generated/client";
 
 @ApiTags('Books Controller')
 @Controller('books')
@@ -29,7 +29,7 @@ export class BooksController {
     @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page ( default is 10 if not specified )' })
     @ApiResponse({ status: 200, description: 'Books from category returned successfully' })
     @ApiResponse({ status: 404, description: 'Category not found' })
-    async findBooksFromCategory(@Param('id', ParseIntPipe) id: number, @Query() paginationDto: PaginationDto): Promise<Book[]> {
+    async findBooksFromCategory(@Param('id', ParseIntPipe) id: number, @Query() paginationDto: PaginationDto): Promise<Prisma.BookGetPayload<{}>[]> {
         return await this.booksService.findBooksFromCategory(id, paginationDto)
     }
 
